@@ -1,7 +1,10 @@
+// https://gradle-ssh-plugin.github.io/docs/
+plugins {
+    id 'org.hidetake.ssh' version '2.9.0'
+    id 'java'
+}
 group 'ru.cwl'
-version '1.0-SNAPSHOT'
-
-apply plugin: 'java'
+version '1.0'
 
 sourceCompatibility = 1.8
 
@@ -10,8 +13,42 @@ repositories {
 }
 
 dependencies {
-    compile "com.sparkjava:spark-core:2.5"
+    compile "com.sparkjava:spark-core:2.7.1"
     compile "org.slf4j:slf4j-simple:1.7.21"
     testCompile group: 'junit', name: 'junit', version: '4.11'
 }
 
+//create a single Jar with all dependencies
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+                'Implementation-Version': version,
+                'Main-Class': 'HelloWorld'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+// deploy
+remotes {
+    m4y {
+        host = 'motiv4you.ru'
+        user = 'root'
+        identity = file('C:\\Users\\adm\\.ssh\\id_rsa')
+    }
+}
+
+task deploy(dependsOn:fatJar) {
+    doLast {
+        ssh.run {
+            session(remotes.m4y) {
+                //execute "mv ~/web/ddd.jarrr ~/web/ddd.jarrr.bak", ignoreError:true
+                //execute "mkdir /home/vad/web/"
+                def oneJar= "${projectDir}/build/libs/${project.name}-all-${version}.jar"
+                //println a
+                put from: oneJar, into: '/home/app1/web'
+            }
+        }
+    }
+}
