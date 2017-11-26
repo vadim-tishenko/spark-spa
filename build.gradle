@@ -48,6 +48,21 @@ task deploy(dependsOn:fatJar) {
                 def oneJar= "${projectDir}/build/libs/${project.name}-all-${version}.jar"
                 //println a
                 put from: oneJar, into: '/home/app1/web'
+                execute "systemctl restart app1"
+            }
+        }
+    }
+}
+// http://help.ubuntu.ru/wiki/systemd
+// https://habrahabr.ru/company/southbridge/blog/255845/
+task installService(){
+
+    doLast {
+        ssh.run {
+            session(remotes.m4y) {
+                def srcf= "${projectDir}/script/app1.service"
+                put from: srcf, into: '/etc/systemd/system/'
+                execute "systemctl daemon-reload"
             }
         }
     }
