@@ -63,6 +63,7 @@ task installService(){
                 def srcf= "${projectDir}/script/app1.service"
                 put from: srcf, into: '/etc/systemd/system/'
                 execute "systemctl daemon-reload"
+                execute "systemctl enable app1.service"
             }
         }
     }
